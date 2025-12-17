@@ -6,23 +6,36 @@ const JobListings = ({ isHome = false }) => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchJobs = async () => {
-      const apiUrl = isHome ? '/api/jobs?_limit=3' : '/api/jobs';
-      try {
-        const res = await fetch(apiUrl);
-        const data = await res.json();
-        setJobs(data);
-      } catch (error) {
-        console.log('Error fetching data', error);
-      } finally {
-        setLoading(false);
+ useEffect(() => {
+  const fetchJobs = async () => {
+    // 1. Use your REAL MockAPI base URL
+    const baseUrl = 'https://6942c25169b12460f312b5ef.mockapi.io/jobs'; 
+    
+    const apiUrl = isHome ? `${baseUrl}?page=1&limit=3` : baseUrl;
+
+    try {
+      const res = await fetch(apiUrl);
+      
+      // Check if the response is actually okay before parsing
+      if (!res.ok) {
+        throw new Error('Network response was not ok');
       }
-    };
 
-    fetchJobs();
-  }, []);
+      const data = await res.json();
+      
+      // 3. Safety check: Ensure data is an array before setting state
+      setJobs(Array.isArray(data) ? data : []);
+      
+    } catch (error) {
+      console.log('Error fetching data', error);
+      setJobs([]); // Fallback to empty array on error to prevent .map crash
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  fetchJobs();
+}, [isHome]);
   return (
     <section className='bg-blue-50 px-4 py-10'>
       <div className='container-xl lg:container m-auto'>
