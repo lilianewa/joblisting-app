@@ -8,28 +8,31 @@ const JobPage = ({ deleteJob }) => {
   const { id } = useParams();
   const job = useLoaderData();
 
-  const onDeleteClick = (jobId) => {
-    const confirm = window.confirm(
-      'Are you sure you want to delete this listing?'
-    );
+  if (!job || !job.company) {
+    return <div className="text-center py-10">Job not found or loading...</div>;
+  }
 
+  // 1. Make this function ASYNC
+  const onDeleteClick = async (jobId) => {
+    const confirm = window.confirm('Are you sure you want to delete this listing?');
     if (!confirm) return;
 
-    deleteJob(jobId);
-
-    toast.success('Job deleted successfully');
-
-    navigate('/jobs');
+    try {
+      // 2. AWAIT the deletion so we know it finished on MockAPI
+      await deleteJob(jobId);
+      toast.success('Job deleted successfully');
+      navigate('/jobs');
+    } catch (error) {
+      toast.error('Could not delete job');
+      console.error(error);
+    }
   };
 
   return (
     <>
       <section>
         <div className='container m-auto py-6 px-6'>
-          <Link
-            to='/jobs'
-            className='text-indigo-500 hover:text-indigo-600 flex items-center'
-          >
+          <Link to='/jobs' className='text-indigo-500 hover:text-indigo-600 flex items-center'>
             <FaArrowLeft className='mr-2' /> Back to Job Listings
           </Link>
         </div>
@@ -49,57 +52,31 @@ const JobPage = ({ deleteJob }) => {
               </div>
 
               <div className='bg-white p-6 rounded-lg shadow-md mt-6'>
-                <h3 className='text-indigo-800 text-lg font-bold mb-6'>
-                  Job Description
-                </h3>
-
+                <h3 className='text-indigo-800 text-lg font-bold mb-6'>Job Description</h3>
                 <p className='mb-4'>{job.description}</p>
-
-                <h3 className='text-indigo-800 text-lg font-bold mb-2'>
-                  Salary
-                </h3>
-
+                <h3 className='text-indigo-800 text-lg font-bold mb-2'>Salary</h3>
                 <p className='mb-4'>{job.salary} / Year</p>
               </div>
             </main>
 
-            {/* <!-- Sidebar --> */}
             <aside>
               <div className='bg-white p-6 rounded-lg shadow-md'>
                 <h3 className='text-xl font-bold mb-6'>Company Info</h3>
-
-                <h2 className='text-2xl'>{job.company.name}</h2>
-
-                <p className='my-2'>{job.company.description}</p>
-
+                <h2 className='text-2xl'>{job.company?.name}</h2>
+                <p className='my-2'>{job.company?.description}</p>
                 <hr className='my-4' />
-
                 <h3 className='text-xl'>Contact Email:</h3>
-
-                <p className='my-2 bg-indigo-100 p-2 font-bold'>
-                  {job.company.contactEmail}
-                </p>
-
+                <p className='my-2 bg-indigo-100 p-2 font-bold'>{job.company?.contactEmail}</p>
                 <h3 className='text-xl'>Contact Phone:</h3>
-
-                <p className='my-2 bg-indigo-100 p-2 font-bold'>
-                  {' '}
-                  {job.company.contactPhone}
-                </p>
+                <p className='my-2 bg-indigo-100 p-2 font-bold'>{job.company?.contactPhone}</p>
               </div>
 
               <div className='bg-white p-6 rounded-lg shadow-md mt-6'>
                 <h3 className='text-xl font-bold mb-6'>Manage Job</h3>
-                <Link
-                  to={`/edit-job/${job.id}`}
-                  className='bg-indigo-500 hover:bg-indigo-600 text-white text-center font-bold py-2 px-4 rounded-full w-full focus:outline-none focus:shadow-outline mt-4 block'
-                >
+                <Link to={`/edit-job/${job.id}`} className='bg-indigo-500 hover:bg-indigo-600 text-white text-center font-bold py-2 px-4 rounded-full w-full focus:outline-none focus:shadow-outline mt-4 block'>
                   Edit Job
                 </Link>
-                <button
-                  onClick={() => onDeleteClick(job.id)}
-                  className='bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-full w-full focus:outline-none focus:shadow-outline mt-4 block'
-                >
+                <button onClick={() => onDeleteClick(job.id)} className='bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-full w-full focus:outline-none focus:shadow-outline mt-4 block'>
                   Delete Job
                 </button>
               </div>
@@ -112,7 +89,13 @@ const JobPage = ({ deleteJob }) => {
 };
 
 const jobLoader = async ({ params }) => {
-  const res = await fetch(`/api/jobs/${params.id}`);
+  const baseUrl = 'https://6942c25169b12460f312b5ef.mockapi.io/jobs';
+  const res = await fetch(`${baseUrl}/${params.id}`);
+  
+  if (!res.ok) {
+    throw new Response('Not Found', { status: 404 });
+  }
+  
   const data = await res.json();
   return data;
 };

@@ -5,9 +5,13 @@ import { Link } from 'react-router-dom';
 const JobListing = ({ job }) => {
   const [showFullDescription, setShowFullDescription] = useState(false);
 
-  let description = job.description;
+  // DEFENSIVE CHECK: If job is missing, don't crash the app
+  if (!job) return null;
 
-  if (!showFullDescription) {
+  // Ensure description exists before trying to use .substring()
+  let description = job.description || "";
+
+  if (!showFullDescription && description.length > 90) {
     description = description.substring(0, 90) + '...';
   }
 
@@ -15,18 +19,22 @@ const JobListing = ({ job }) => {
     <div className='bg-white rounded-xl shadow-md relative'>
       <div className='p-4'>
         <div className='mb-6'>
-          <div className='text-gray-600 my-2'>{job.type}</div>
-          <h3 className='text-xl font-bold'>{job.title}</h3>
+          {/* Use optional chaining or defaults for safety */}
+          <div className='text-gray-600 my-2'>{job.type || 'Full-Time'}</div>
+          <h3 className='text-xl font-bold'>{job.title || 'Job Title'}</h3>
         </div>
 
         <div className='mb-5'>{description}</div>
 
-        <button
-          onClick={() => setShowFullDescription((prevState) => !prevState)}
-          className='text-indigo-500 mb-5 hover:text-indigo-600'
-        >
-          {showFullDescription ? 'Less' : 'More'}
-        </button>
+        {/* Only show 'More/Less' button if description is long enough */}
+        {(job.description?.length > 90) && (
+          <button
+            onClick={() => setShowFullDescription((prevState) => !prevState)}
+            className='text-indigo-500 mb-5 hover:text-indigo-600'
+          >
+            {showFullDescription ? 'Less' : 'More'}
+          </button>
+        )}
 
         <h3 className='text-indigo-500 mb-2'>{job.salary} / Year</h3>
 
@@ -48,4 +56,5 @@ const JobListing = ({ job }) => {
     </div>
   );
 };
+
 export default JobListing;

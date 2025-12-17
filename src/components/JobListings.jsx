@@ -8,7 +8,7 @@ const JobListings = ({ isHome = false }) => {
 
  useEffect(() => {
   const fetchJobs = async () => {
-    // 1. Use your REAL MockAPI base URL
+    
     const baseUrl = 'https://6942c25169b12460f312b5ef.mockapi.io/jobs'; 
     
     const apiUrl = isHome ? `${baseUrl}?page=1&limit=3` : baseUrl;
